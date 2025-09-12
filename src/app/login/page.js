@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function Login() {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+  const router = useRouter();
 
   const handleChange = (e) => {
     setFormData({
@@ -24,12 +26,12 @@ export default function Login() {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
-        <h1 className="auth-title">Iniciar Sesión</h1>
+      <div className="auth-card glass-card">
+        <h1 className="titulo">Iniciar Sesión</h1>
         
         <form onSubmit={handleSubmit} className="auth-form">
-          <div className="input-group">
-            <label htmlFor="email" className="input-label">Email:</label>
+          <div className="form-group">
+            <label htmlFor="email" className="form-label">Correo:</label>
             <input
               type="email"
               id="email"
@@ -37,12 +39,13 @@ export default function Login() {
               value={formData.email}
               onChange={handleChange}
               required
-              className="input-field"
+              className="form-input"
+              placeholder="example@email.com"
             />
           </div>
           
-          <div className="input-group">
-            <label htmlFor="password" className="input-label">Contraseña:</label>
+          <div className="form-group">
+            <label htmlFor="password" className="form-label">Contraseña:</label>
             <input
               type="password"
               id="password"
@@ -50,7 +53,8 @@ export default function Login() {
               value={formData.password}
               onChange={handleChange}
               required
-              className="input-field"
+              className="form-input"
+              placeholder="••••••••"
             />
           </div>
           
@@ -60,7 +64,7 @@ export default function Login() {
         </form>
         
         <p className="auth-link">
-          ¿No tienes cuenta? <Link href="/register" className="link">Regístrate aquí</Link>
+          ¿No tienes cuenta? <Link href="/register">Regístrate aquí</Link>
         </p>
       </div>
     </div>

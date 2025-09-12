@@ -24,9 +24,7 @@ export default function RootLayout({ children }) {
       >
         {children}
         <footer>
-          <div className="container">
-            <p>© {new Date().getFullYear()} Lexora</p>
-          </div>
+          <p>© {new Date().getFullYear()} Lexora</p>
         </footer>
       </body>
     </html>

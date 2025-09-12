@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -10,6 +11,7 @@ export default function Register() {
     password: '',
     confirmPassword: ''
   });
+  const router = useRouter();
 
   const handleChange = (e) => {
     setFormData({
@@ -20,18 +22,26 @@ export default function Register() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    if (formData.password !== formData.confirmPassword) {
+      alert('Las contraseñas no coinciden');
+      return;
+    }
+    
     console.log('Datos de registro:', formData);
     // Aquí iría la lógica de registro
+    alert('Usuario registrado exitosamente');
+    router.push('/login');
   };
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
-        <h1 className="auth-title">Crear Cuenta</h1>
+      <div className="auth-card glass-card">
+        <h1 className="titulo">Crear Cuenta</h1>
         
         <form onSubmit={handleSubmit} className="auth-form">
-          <div className="input-group">
-            <label htmlFor="name" className="input-label">Nombre:</label>
+          <div className="form-group">
+            <label htmlFor="name" className="form-label">Nombre:</label>
             <input
               type="text"
               id="name"
@@ -39,12 +49,13 @@ export default function Register() {
               value={formData.name}
               onChange={handleChange}
               required
-              className="input-field"
+              className="form-input"
+              placeholder="Tu nombre"
             />
           </div>
           
-          <div className="input-group">
-            <label htmlFor="email" className="input-label">Email:</label>
+          <div className="form-group">
+            <label htmlFor="email" className="form-label">Correo:</label>
             <input
               type="email"
               id="email"
@@ -52,12 +63,13 @@ export default function Register() {
               value={formData.email}
               onChange={handleChange}
               required
-              className="input-field"
+              className="form-input"
+              placeholder="example@email.com"
             />
           </div>
           
-          <div className="input-group">
-            <label htmlFor="password" className="input-label">Contraseña:</label>
+          <div className="form-group">
+            <label htmlFor="password" className="form-label">Contraseña:</label>
             <input
               type="password"
               id="password"
@@ -65,12 +77,13 @@ export default function Register() {
               value={formData.password}
               onChange={handleChange}
               required
-              className="input-field"
+              className="form-input"
+              placeholder="••••••••"
             />
           </div>
           
-          <div className="input-group">
-            <label htmlFor="confirmPassword" className="input-label">Confirmar Contraseña:</label>
+          <div className="form-group">
+            <label htmlFor="confirmPassword" className="form-label">Confirmar Contraseña:</label>
             <input
               type="password"
               id="confirmPassword"
@@ -78,7 +91,8 @@ export default function Register() {
               value={formData.confirmPassword}
               onChange={handleChange}
               required
-              className="input-field"
+              className="form-input"
+              placeholder="••••••••"
             />
           </div>
           
@@ -88,7 +102,7 @@ export default function Register() {
         </form>
         
         <p className="auth-link">
-          ¿Ya tienes cuenta? <Link href="/login" className="link">Inicia sesión aquí</Link>
+          ¿Ya tienes cuenta? <Link href="/login">Inicia sesión aquí</Link>
         </p>
       </div>
     </div>
