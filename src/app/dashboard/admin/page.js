@@ -10,129 +10,79 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('reviews');
   const router = useRouter();
 
-  // Datos de ejemplo
-  const sampleReviews = [
-    {
-      id: 1,
-      bookTitle: 'Cien años de soledad',
-      bookAuthor: 'Gabriel García Márquez',
-      userName: 'Ana García',
-      userEmail: 'ana@ejemplo.com',
-      rating: 5,
-      review: 'Una obra maestra de la literatura latinoamericana. García Márquez te transporta a Macondo con su narrativa mágica.',
-      status: 'pendiente',
-      submittedAt: '2024-01-15'
-    },
-    {
-      id: 2,
-      bookTitle: '1984',
-      bookAuthor: 'George Orwell',
-      userName: 'Carlos López',
-      userEmail: 'carlos@ejemplo.com',
-      rating: 4,
-      review: 'Muy buena distopía, aunque un poco deprimente. La vigilancia constante te hace reflexionar.',
-      status: 'aprobado',
-      submittedAt: '2024-01-14'
-    },
-    {
-      id: 3,
-      bookTitle: 'El principito',
-      bookAuthor: 'Antoine de Saint-Exupéry',
-      userName: 'María Rodríguez',
-      userEmail: 'maria@ejemplo.com',
-      rating: 3,
-      review: 'Bonito para niños, pero esperaba más profundidad. Las ilustraciones son encantadoras.',
-      status: 'rechazado',
-      submittedAt: '2024-01-13'
-    },
-    {
-      id: 4,
-      bookTitle: 'Don Quijote de la Mancha',
-      bookAuthor: 'Miguel de Cervantes',
-      userName: 'Juan Martínez',
-      userEmail: 'juan@ejemplo.com',
-      rating: 5,
-      review: 'Obra cumbre de la literatura española. La locura de Don Quijote es conmovedora y divertida.',
-      status: 'pendiente',
-      submittedAt: '2024-01-12'
+  const fetchAdminData = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return;
     }
-  ];
 
-  const sampleUsers = [
-    {
-      id: 1,
-      name: 'Ana García',
-      email: 'ana@ejemplo.com',
-      role: 'usuario',
-      joinedAt: '2024-01-01',
-      reviewsCount: 3,
-      approvedReviews: 2
-    },
-    {
-      id: 2,
-      name: 'Carlos López',
-      email: 'carlos@ejemplo.com',
-      role: 'usuario',
-      joinedAt: '2024-01-05',
-      reviewsCount: 5,
-      approvedReviews: 4
-    },
-    {
-      id: 3,
-      name: 'María Rodríguez',
-      email: 'maria@ejemplo.com',
-      role: 'usuario',
-      joinedAt: '2024-01-10',
-      reviewsCount: 2,
-      approvedReviews: 1
-    },
-    {
-      id: 4,
-      name: 'Admin Principal',
-      email: 'admin@biblioteca.com',
-      role: 'admin',
-      joinedAt: '2024-01-01',
-      reviewsCount: 0,
-      approvedReviews: 0
+    try {
+      const response = await fetch('/api/admin', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('No se pudieron obtener los datos del admin');
+      }
+
+      const data = await response.json();
+      setReviews(data.reviews);
+      setUsers(data.users);
+      setUser(data.user);
+    } catch (error) {
+      console.error("Error fetching admin data:", error);
+      localStorage.removeItem('token');
+      router.push('/login');
     }
-  ];
+  };
 
   useEffect(() => {
-    // Simular verificación de admin
-    const userData = {
-      name: 'Admin Principal',
-      email: 'admin@biblioteca.com',
-      role: 'admin'
-    };
-    
-    setUser(userData);
-    setReviews(sampleReviews);
-    setUsers(sampleUsers);
+    fetchAdminData();
   }, []);
 
   const handleLogout = () => {
-    alert('Sesión cerrada');
+    localStorage.removeItem('token');
     router.push('/');
   };
 
-  const approveReview = (reviewId) => {
-    setReviews(reviews.map(review =>
-      review.id === reviewId ? { ...review, status: 'aprobado' } : review
-    ));
-    alert('Reseña aprobada exitosamente');
+  const updateReviewStatus = async (reviewId, action) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.');
+      router.push('/login');
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/admin/reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ reviewId, action }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al actualizar la reseña');
+      }
+
+      await fetchAdminData();
+      alert(`Reseña ${action === 'delete' ? 'eliminada' : 'actualizada'} exitosamente`);
+
+    } catch (error) {
+      console.error("Error updating review:", error);
+      alert(`Hubo un error al realizar la operación: ${error.message}`);
+    }
   };
 
-  const rejectReview = (reviewId) => {
-    setReviews(reviews.map(review =>
-      review.id === reviewId ? { ...review, status: 'rechazado' } : review
-    ));
-    alert('Reseña rechazada');
-  };
-
-  const deleteReview = (reviewId) => {
-    setReviews(reviews.filter(review => review.id !== reviewId));
-    alert('Reseña eliminada');
-  };
+  const approveReview = async (reviewId) => updateReviewStatus(reviewId, 'approve');
+  const rejectReview = async (reviewId) => updateReviewStatus(reviewId, 'reject');
+  const deleteReview = async (reviewId) => updateReviewStatus(reviewId, 'delete');
 
   const StarRating = ({ rating, readonly = true }) => {
     return (
@@ -171,27 +121,30 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div>
+    <div className="dashboard-admin-container">
       <header>
         <nav>
           <h1>Panel de Administración</h1>
           <div>
             <span className="welcome">Hola, {user.name}</span>
-            <button onClick={handleLogout} className="logout-btn">Cerrar Sesión</button>
+            <button
+              onClick={() => router.push('/dashboard/admin/manage-users')}
+              className="manage-users-btn"
+            >
+              Gestión de Usuarios
+            </button>
+            <button onClick={handleLogout} className="logout-btn">
+              Cerrar Sesión
+            </button>
           </div>
         </nav>
       </header>
-
       <main className="container">
-        {/* Banner de administración */}
         <section className="admin-banner">
-          <div className="admin-content">
-            <h2>Panel de Control del Administrador</h2>
-            <p>Gestiona reseñas y usuarios del sistema</p>
-          </div>
+          <h2>Panel de Administración de la Biblioteca</h2>
+          <p>Gestión de reseñas de libros y usuarios registrados</p>
         </section>
 
-        {/* Estadísticas */}
         <section className="admin-stats">
           <div className="stats-grid">
             <div className="stat-card">
@@ -217,31 +170,27 @@ export default function AdminDashboard() {
           </div>
         </section>
 
-        {/* Navegación por pestañas */}
         <section className="tabs-section">
-          <div className="tabs">
-            <button 
-              className={`tab ${activeTab === 'reviews' ? 'active' : ''}`}
-              onClick={() => setActiveTab('reviews')}
-            >
-              📝 Reseñas Pendientes
-            </button>
-            <button 
-              className={`tab ${activeTab === 'users' ? 'active' : ''}`}
-              onClick={() => setActiveTab('users')}
-            >
-              👥 Usuarios
-            </button>
-            <button 
-              className={`tab ${activeTab === 'approved' ? 'active' : ''}`}
-              onClick={() => setActiveTab('approved')}
-            >
-              ✅ Reseñas Aprobadas
-            </button>
-          </div>
+          <button
+            className={`tab-btn ${activeTab === 'reviews' ? 'active' : ''}`}
+            onClick={() => setActiveTab(activeTab === 'reviews' ? null : 'reviews')}
+          >
+            Reseñas Pendientes
+          </button>
+          <button
+            className={`tab-btn ${activeTab === 'approved' ? 'active' : ''}`}
+            onClick={() => setActiveTab(activeTab === 'approved' ? null : 'approved')}
+          >
+            Reseñas Aprobadas
+          </button>
+          <button
+            className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
+            onClick={() => setActiveTab(activeTab === 'users' ? null : 'users')}
+          >
+            Usuarios
+          </button>
         </section>
 
-        {/* Contenido de las pestañas */}
         <section className="tab-content">
           {activeTab === 'reviews' && (
             <div className="reviews-list">
@@ -252,48 +201,29 @@ export default function AdminDashboard() {
                 </div>
               ) : (
                 reviews.filter(r => r.status === 'pendiente').map(review => (
-                  <div key={review.id} className="review-card">
+                  <div key={review._id} className="review-card">
                     <div className="review-header">
-                      <div className="review-book">
-                        <h4>{review.bookTitle}</h4>
-                        <p>por {review.bookAuthor}</p>
-                      </div>
-                      <div className="review-user">
-                        <span className="user-name">{review.userName}</span>
-                        <span className="user-email">{review.userEmail}</span>
-                      </div>
+                      <h4>{review.bookTitle}</h4>
+                      <p>por {review.userName || 'Usuario'}</p>
                     </div>
-
                     <div className="review-rating">
                       <StarRating rating={review.rating} />
-                      <span className="rating-text">({review.rating}/5)</span>
                     </div>
-
                     <div className="review-content">
                       <p>{review.review}</p>
                     </div>
-
                     <div className="review-footer">
                       <span className="review-date">
                         Enviada el: {new Date(review.submittedAt).toLocaleDateString()}
                       </span>
                       <div className="review-actions">
-                        <button 
-                          className="approve-btn"
-                          onClick={() => approveReview(review.id)}
-                        >
+                        <button className="approve-btn" onClick={() => approveReview(review._id)}>
                           ✅ Aprobar
                         </button>
-                        <button 
-                          className="reject-btn"
-                          onClick={() => rejectReview(review.id)}
-                        >
+                        <button className="reject-btn" onClick={() => rejectReview(review._id)}>
                           ❌ Rechazar
                         </button>
-                        <button 
-                          className="delete-btn"
-                          onClick={() => deleteReview(review.id)}
-                        >
+                        <button className="delete-btn" onClick={() => deleteReview(review._id)}>
                           🗑️ Eliminar
                         </button>
                       </div>
@@ -313,30 +243,20 @@ export default function AdminDashboard() {
                 </div>
               ) : (
                 reviews.filter(r => r.status === 'aprobado').map(review => (
-                  <div key={review.id} className="review-card approved">
+                  <div key={review._id} className="review-card approved">
                     <div className="review-header">
-                      <div className="review-book">
-                        <h4>{review.bookTitle}</h4>
-                        <p>por {review.bookAuthor}</p>
-                      </div>
-                      <div className="review-user">
-                        <span className="user-name">{review.userName}</span>
-                        <span className="user-email">{review.userEmail}</span>
-                      </div>
+                      <h4>{review.bookTitle}</h4>
+                      <p>por {review.userName || 'Usuario'}</p>
                     </div>
-
                     <div className="review-rating">
                       <StarRating rating={review.rating} />
-                      <span className="rating-text">({review.rating}/5)</span>
                     </div>
-
                     <div className="review-content">
                       <p>{review.review}</p>
                     </div>
-
                     <div className="review-footer">
                       <span className="review-date">
-                        Aprobada el: {new Date().toLocaleDateString()}
+                        Aprobada el: {new Date(review.submittedAt).toLocaleDateString()}
                       </span>
                       {getStatusBadge(review.status)}
                     </div>
@@ -351,41 +271,16 @@ export default function AdminDashboard() {
               <h3>Usuarios Registrados</h3>
               <div className="users-grid">
                 {users.map(user => (
-                  <div key={user.id} className="user-card">
+                  <div key={user._id} className="user-card">
                     <div className="user-header">
                       <h4>{user.name}</h4>
-                      <span className={`user-role ${user.role}`}>
-                        {user.role}
-                      </span>
+                      <p>{user.email}</p>
                     </div>
-                    
                     <div className="user-info">
-                      <p className="user-email">{user.email}</p>
-                      <p className="user-joined">
-                        Miembro desde: {new Date(user.joinedAt).toLocaleDateString()}
-                      </p>
+                      <span className="user-role">Rol: {user.role}</span>
                     </div>
-
                     <div className="user-stats">
-                      <div className="user-stat">
-                        <span className="stat-number">{user.reviewsCount}</span>
-                        <span className="stat-label">Reseñas</span>
-                      </div>
-                      <div className="user-stat">
-                        <span className="stat-number">{user.approvedReviews}</span>
-                        <span className="stat-label">Aprobadas</span>
-                      </div>
-                    </div>
-
-                    <div className="user-actions">
-                      <button className="user-btn view-btn">
-                        👁️ Ver Perfil
-                      </button>
-                      {user.role === 'usuario' && (
-                        <button className="user-btn delete-btn">
-                          🗑️ Eliminar
-                        </button>
-                      )}
+                      <p>Reseñas: {reviews.filter(r => r.userId.toString() === user._id.toString()).length}</p>
                     </div>
                   </div>
                 ))}

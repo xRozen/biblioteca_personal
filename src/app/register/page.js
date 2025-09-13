@@ -8,9 +8,10 @@ export default function Register() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: '',
-    confirmPassword: ''
+    password: ''
   });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const router = useRouter();
 
   const handleChange = (e) => {
@@ -20,25 +21,51 @@ export default function Register() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (formData.password !== formData.confirmPassword) {
-      alert('Las contraseñas no coinciden');
+    setError('');
+    setSuccess('');
+
+    if (formData.password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres.');
       return;
     }
     
-    console.log('Datos de registro:', formData);
-    // Aquí iría la lógica de registro
-    alert('Usuario registrado exitosamente');
-    router.push('/login');
+    try {
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || 'Error en el registro');
+        return;
+      }
+      
+      setSuccess('Registro exitoso');
+      
+      setTimeout(() => {
+        router.push('/login');
+      }, 2000); 
+
+    } catch (err) {
+      console.error('Error de conexión:', err);
+      setError('No se pudo conectar al servidor.');
+    }
   };
 
   return (
     <div className="auth-container">
       <div className="auth-card glass-card">
-        <h1 className="titulo">Crear Cuenta</h1>
-        
+        <h1 className="titulo">Registro</h1>
+        {error && <p className="error-message">{error}</p>}
+        {success && <p className="success-message">{success}</p>}
+
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
             <label htmlFor="name" className="form-label">Nombre:</label>
@@ -50,10 +77,10 @@ export default function Register() {
               onChange={handleChange}
               required
               className="form-input"
-              placeholder="Tu nombre"
+              placeholder="Tu nombre completo"
             />
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="email" className="form-label">Correo:</label>
             <input
@@ -78,21 +105,7 @@ export default function Register() {
               onChange={handleChange}
               required
               className="form-input"
-              placeholder="••••••••"
-            />
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="confirmPassword" className="form-label">Confirmar Contraseña:</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-              className="form-input"
-              placeholder="••••••••"
+              placeholder="Ingrese su contraseña (min 8 caracteres)"
             />
           </div>
           

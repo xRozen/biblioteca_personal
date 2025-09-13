@@ -9,6 +9,7 @@ export default function Login() {
     email: '',
     password: ''
   });
+  const [error, setError] = useState(''); 
   const router = useRouter();
 
   const handleChange = (e) => {
@@ -18,10 +19,41 @@ export default function Login() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Datos de login:', formData);
-    // Aquí iría la lógica de login
+    setError('');
+
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || 'Error de inicio de sesión');
+        return;
+      }
+
+      // 1. Almacena el token de seguridad
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userRole', data.user.role);
+
+      // 2. Redirige según el rol del usuario
+      if (data.user.role === 'admin') {
+        router.push('/dashboard/admin');
+      } else {
+        router.push('/dashboard/user');
+      }
+
+    } catch (err) {
+      console.error('Error de conexión:', err);
+      setError('No se pudo conectar al servidor.');
+    }
   };
 
   return (
@@ -54,7 +86,7 @@ export default function Login() {
               onChange={handleChange}
               required
               className="form-input"
-              placeholder="••••••••"
+              placeholder="Ingrese su contraseña (min 8 caracteres)"
             />
           </div>
           
