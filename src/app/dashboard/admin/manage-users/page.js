@@ -55,7 +55,7 @@ export default function ManageUsersPage() {
       }
       alert('Usuario creado exitosamente.');
       setNewUser({ name: '', email: '', password: '', role: 'usuario' });
-      fetchUsers(); // Actualiza la lista de usuarios
+      fetchUsers();
     } catch (error) {
       alert(`Error al crear usuario: ${error.message}`);
     }
@@ -80,7 +80,7 @@ export default function ManageUsersPage() {
       alert('Rol de usuario actualizado.');
       setSelectedUser(null);
       setNewRole('');
-      fetchUsers(); // Actualiza la lista de usuarios
+      fetchUsers();
     } catch (error) {
       alert(`Error al asignar rol: ${error.message}`);
     }

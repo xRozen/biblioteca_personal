@@ -39,11 +39,11 @@ export default function Login() {
         return;
       }
 
-      // 1. Almacena el token de seguridad
+      // Almacena el token de seguridad
       localStorage.setItem('token', data.token);
       localStorage.setItem('userRole', data.user.role);
 
-      // 2. Redirige según el rol del usuario
+      // Redirige según el rol del usuario
       if (data.user.role === 'admin') {
         router.push('/dashboard/admin');
       } else {
