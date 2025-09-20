@@ -27,9 +27,8 @@ async function setupEnv() {
   }
 
   try {
-    fs.writeFileSync('.env', envContent);
+    fs.writeFileSync('.env.local', envContent);
     console.log("\n¡Archivo .env creado exitosamente");
-    console.log("Renombra este archivo a '.env.local' para usarlo con Next.js.");
     console.log("Inicia la aplicación con 'npm run dev'.");
   } catch (error) {
     console.error("\nError al crear el archivo .env", error);
